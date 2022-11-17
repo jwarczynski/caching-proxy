@@ -5,6 +5,6 @@
 
 using namespace std;
 
-string makeRequest(string remoteHost, string requestBody);
+string makeRequest(string requestBody);
 
 #endif
