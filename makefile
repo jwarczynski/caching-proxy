@@ -2,16 +2,17 @@ CPP_SOURCES = $(wildcard src/*.cpp) $(wildcard src/**/*.cpp) $(wildcard src/**/*
 HEADERS = $(wildcard src/*.hpp) $(wildcard src/**/*.hpp) $(wildcard src/**/**/*.hpp)
 OBJ = ${patsubst src/%.cpp, obj/%.o, $(CPP_SOURCES)}
 OUTPUT = bin/http-cache
+FLAGS = -Wall -Wextra -std=c++2a -O0
 
 all: folders ${OUTPUT}
 run: all
 	./${OUTPUT}
 
 ${OUTPUT}: ${OBJ}
-	g++ -o $@ $^ -Wall -Wextra
+	g++ -o $@ $^ $(FLAGS)
 
 obj/%.o: src/%.cpp ${HEADERS}
-	g++ -c $< -o $@ -Wall -Wextra
+	g++ -c $< -o $@ $(FLAGS)
 
 clean:
 	rm -rf obj bin
