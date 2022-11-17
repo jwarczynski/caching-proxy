@@ -13,7 +13,7 @@
 
 int createSocket();
 void bindSocket(int socket, short port);
-void listenSocket(int socket, int backlog);
+void listenOnSocket(int socket, int backlog);
 
 
 void startServer(requestHandler handleRequest){
