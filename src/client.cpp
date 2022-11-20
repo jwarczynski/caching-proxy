@@ -179,12 +179,11 @@ string prepareRemoteRequestBody(string requestBody, string hostName, string reso
     int resourcePathStartPos = requestBody.find(" ") + 1;
     int resourcePathEndPos = requestBody.find(" ", resourcePathStartPos);
     int resourcePathLen = resourcePathEndPos - resourcePathStartPos;
+    requestBody.replace(resourcePathStartPos, resourcePathLen, resourcePath);
 
     int hostStartPos = requestBody.find("Host: ") + 6;
     int hostEndPos = requestBody.find("\r\n", hostStartPos);
     int hostLen = hostEndPos - hostStartPos;
-
-    requestBody.replace(resourcePathStartPos, resourcePathLen, resourcePath);
     requestBody.replace(hostStartPos, hostLen, hostName);
 
     return requestBody;
