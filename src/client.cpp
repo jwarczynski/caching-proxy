@@ -105,7 +105,7 @@ string getHostFromResourcePathPostRequest(string requestBody){
 }
 
 bool isGetRequest(string requestBody){
-    return ((int) requestBody.find("GET") != -1) ? true : false;
+    return ((int)requestBody.find("GET") == 0) ? true : false;
 }
 
 int prepareRemoteRequest(string *requestBody, sockaddr_in **serverAddr){
