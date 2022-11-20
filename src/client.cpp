@@ -25,18 +25,14 @@ bool isResourcePathIncluded(string hostName);
 void separateHostAndResourcePath(string *hostName, string *resourcePath);
 
 string getErrorPage(string errorMessage){
-    char requestTemplate[] =
-        "HTTP/1.1 500 Internal Server Error\r\n"
+
+        return 
+        "HTTP/1.1 500 Internal Server Error\r\n\r\n"
         "<html>\r\n"
         "<body>\r\n"
-        "<h1>%s</h1>\r\n"
+        "<h1>"+ errorMessage + "</h1>\r\n"
         "</body>\r\n"
         "</html>\r\n";
-
-    char response[1024];
-    sprintf(response, requestTemplate, errorMessage.c_str());
-
-    return string(response);
 }
 
 sockaddr_in* getServerAddressByHost(string host){
