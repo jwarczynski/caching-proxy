@@ -25,18 +25,14 @@ bool isResourcePathIncluded(string hostName);
 void separateHostAndResourcePath(string *hostName, string *resourcePath);
 
 string getErrorPage(string errorMessage){
-    char requestTemplate[] =
-        "HTTP/1.1 500 Internal Server Error\r\n"
+
+        return 
+        "HTTP/1.1 500 Internal Server Error\r\n\r\n"
         "<html>\r\n"
         "<body>\r\n"
-        "<h1>%s</h1>\r\n"
+        "<h1>"+ errorMessage + "</h1>\r\n"
         "</body>\r\n"
         "</html>\r\n";
-
-    char response[1024];
-    sprintf(response, requestTemplate, errorMessage.c_str());
-
-    return string(response);
 }
 
 sockaddr_in* getServerAddressByHost(string host){
@@ -71,28 +67,28 @@ string makeRequest(string requestBody) {
         return getErrorPage(requestBody);
     }
 
-    int clientSocekt = socket(AF_INET, SOCK_STREAM, 0);
-    int res = connect(clientSocekt, (sockaddr*)target, sizeof(*target));
+    int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+    int res = connect(clientSocket, (sockaddr*)target, sizeof(*target));
     if(res == -1){
-        return handleInternalError(clientSocekt, "annot connect with remote server");
+        return handleInternalError(clientSocket, "annot connect with remote server");
     }
 
-    ssize_t bytesWritten = write(clientSocekt, requestBody.c_str(), requestBody.length());
+    ssize_t bytesWritten = write(clientSocket, requestBody.c_str(), requestBody.length());
     if(bytesWritten != (long int) requestBody.length()){
-        handleInternalError(clientSocekt, "wrote uncomplete request to remote server");
+        handleInternalError(clientSocket, "wrote uncomplete request to remote server");
     }
 
     char rcvBuf[INT16_MAX];
-    ssize_t bytesRead = read(clientSocekt, rcvBuf, INT16_MAX);
+    ssize_t bytesRead = read(clientSocket, rcvBuf, INT16_MAX);
     if(bytesRead < 0){
-        return handleInternalError(clientSocekt, "error during reading http response");
+        return handleInternalError(clientSocket, "error during reading http response");
     }
     else if(bytesRead == 0){
-        return handleInternalError(clientSocekt, "received nothing from remote server");
+        return handleInternalError(clientSocket, "received nothing from remote server");
     }
 
-    close(clientSocekt);
-    return string(rcvBuf, strlen(rcvBuf));
+    close(clientSocket);
+    return string(rcvBuf, bytesRead);
 }
 
 string getHostFromResourcePath(int resourcePathStartPos, string requestBody){
@@ -109,7 +105,7 @@ string getHostFromResourcePathPostRequest(string requestBody){
 }
 
 bool isGetRequest(string requestBody){
-    return ((int) requestBody.find("GET") != -1) ? true : false;
+    return ((int)requestBody.find("GET") == 0) ? true : false;
 }
 
 int prepareRemoteRequest(string *requestBody, sockaddr_in **serverAddr){
@@ -183,12 +179,11 @@ string prepareRemoteRequestBody(string requestBody, string hostName, string reso
     int resourcePathStartPos = requestBody.find(" ") + 1;
     int resourcePathEndPos = requestBody.find(" ", resourcePathStartPos);
     int resourcePathLen = resourcePathEndPos - resourcePathStartPos;
+    requestBody.replace(resourcePathStartPos, resourcePathLen, resourcePath);
 
     int hostStartPos = requestBody.find("Host: ") + 6;
     int hostEndPos = requestBody.find("\r\n", hostStartPos);
     int hostLen = hostEndPos - hostStartPos;
-
-    requestBody.replace(resourcePathStartPos, resourcePathLen, resourcePath);
     requestBody.replace(hostStartPos, hostLen, hostName);
 
     return requestBody;
