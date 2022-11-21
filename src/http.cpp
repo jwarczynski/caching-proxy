@@ -21,8 +21,9 @@ Request *parseRequestBody(string &requestBody){
     do {
         string line = requestBody.substr(lineBeginning, lineEnd - lineBeginning);
         size_t colon = line.find(':');
+        size_t valueStart = line.find_first_not_of(' ', colon + 1);
         string key = line.substr(0, colon);
-        string value = line.substr(colon + 1);
+        string value = line.substr(valueStart);
         headers->insert(pair<string, string>(key, value));
         lineBeginning = lineEnd + 2;
         lineEnd = requestBody.find("\r\n", lineBeginning + 1);
@@ -40,9 +41,17 @@ void freeRequest(Request *request){
     delete request;
 }
 
-// TODO: Determine if the target host is passed as a header or as a part of the path
 string buildUrl(Request *request){
     string url = request->resourcePath;
+
+    size_t httpPos = url.find("http://");
+    if(httpPos == 0) return url.substr(7);
+    if(httpPos == 1 && url[0] == '/') return url.substr(8);
+
+    size_t httpsPos = url.find("https://");
+    if(httpsPos == 0) return url.substr(8);
+    if(httpsPos == 1 && url[0] == '/') return url.substr(9);
+
     if(request->headers->find("Host") != request->headers->end()){
         url = request->headers->at("Host") + url;
     }
