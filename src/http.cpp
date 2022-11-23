@@ -57,3 +57,34 @@ string buildUrl(Request *request){
     }
     return url;
 }
+
+Url parseUrl(string url){
+    Url parsedUrl = {
+        .protocol = "http",
+        .host = "",
+        .port = "80",
+        .path = "/"
+    };
+
+    size_t protocolEnd = url.find("://");
+    if(protocolEnd != string::npos){
+        parsedUrl.protocol = url.substr(0, protocolEnd);
+        url = url.substr(protocolEnd + 3);
+    }
+
+    size_t pathStart = url.find('/');
+    if(pathStart != string::npos){
+        parsedUrl.path = url.substr(pathStart);
+        url = url.substr(0, pathStart);
+    }
+
+    size_t portStart = url.find(':');
+    if(portStart != string::npos){
+        parsedUrl.port = stoi(url.substr(portStart + 1));
+        url = url.substr(0, portStart);
+    }
+
+    parsedUrl.host = url;
+
+    return parsedUrl;
+}
