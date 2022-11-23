@@ -37,10 +37,14 @@ void startServer(requestHandler handleRequest){
             exit(1);
         }
 
-        string requestBody(buffer, bytesRead);
-        string responseBody = handleRequest(requestBody);
+        try {
+            string requestBody(buffer, bytesRead);
+            string responseBody = handleRequest(requestBody);
 
-        write(clientSocket, responseBody.c_str(), responseBody.length());
+            write(clientSocket, responseBody.c_str(), responseBody.length());
+        }catch(exception &e){
+            // TODO: Error page?
+        }
         close(clientSocket);
     }
 }
