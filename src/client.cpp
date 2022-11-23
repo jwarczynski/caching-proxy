@@ -1,6 +1,6 @@
 #include "client.hpp"
+#include "http.hpp"
 
-#include <cstring>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -9,20 +9,11 @@
 #include <stdexcept>
 
 
-#define HOST_EXPR "Host"
-
 sockaddr_in* getServerAddressByHost(string domain);
 sockaddr_in *getServerAddressByHostAndPort(string host, string port);
 
-string getHostNameFromRequest(string requestBody);
-
 string prepareRemoteRequestBody(string requestBody, string hostName, string resourcePath);
 int prepareRemoteRequest(string *requestBody, sockaddr_in **serverAddr);
-
-bool isPortIncluded(string host);
-void seperateIpAndPort(string *hostName, string *port);
-bool isResourcePathIncluded(string hostName);
-void separateHostAndResourcePath(string *hostName, string *resourcePath);
 
 string getErrorPage(string errorMessage){
 
@@ -91,88 +82,22 @@ string makeRequest(string requestBody) {
     return string(rcvBuf, bytesRead);
 }
 
-string getHostFromResourcePath(int resourcePathStartPos, string requestBody){
-    string hostName = requestBody.substr(resourcePathStartPos, requestBody.find(" ", resourcePathStartPos) - resourcePathStartPos);
-    return hostName;
-}
-
-string getHostFromResourcePathGetRequest(string requestBody){
-    return getHostFromResourcePath(5, requestBody);
-}
-
-string getHostFromResourcePathPostRequest(string requestBody){
-    return getHostFromResourcePath(6, requestBody);
-}
-
-bool isGetRequest(string requestBody){
-    return ((int)requestBody.find("GET") == 0) ? true : false;
-}
-
 int prepareRemoteRequest(string *requestBody, sockaddr_in **serverAddr){
-    string hostName = getHostNameFromRequest(*requestBody);
-    string port("http");
-    string resourcePath("/");
+    Request* request = parseRequestBody(*requestBody);
+    string urlString = buildUrl(request);
+    Url url = parseUrl(urlString);
 
-    if(isPortIncluded(hostName)){
-        seperateIpAndPort(&hostName, &port);
+    freeRequest(request);
 
-         if((!hostName.compare("localhost") || !hostName.compare("127.0.0.1")) && !port.compare("8080")){
-            port = "http";
-
-            if(isGetRequest(*requestBody))
-                hostName = getHostFromResourcePathGetRequest(*requestBody);
-            else
-                hostName = getHostFromResourcePathPostRequest(*requestBody);
-
-            if(isResourcePathIncluded(hostName)){
-                separateHostAndResourcePath(&hostName, &resourcePath);
-            }
-        }
-    }
-    try
-    {
-      *serverAddr = getServerAddressByHostAndPort(hostName, port);
-    } catch(const std::runtime_error& e)
-    {
+    try{
+        *serverAddr = getServerAddressByHostAndPort(url.host, url.port);
+    }catch(const std::runtime_error& e){
         *requestBody = e.what();
         return -1;
     }
 
-    *requestBody = prepareRemoteRequestBody(*requestBody, hostName, resourcePath);
-
+    *requestBody = prepareRemoteRequestBody(*requestBody, url.host, url.path);
     return 0;
-}
-
-void separateHostAndResourcePath(string *hostName, string *resourcePath){
-    size_t resourcePathStartPos = hostName->find("/");
-    *resourcePath = hostName->substr(resourcePathStartPos, hostName->length() - resourcePathStartPos + 1);
-    *hostName = hostName->substr(0, resourcePathStartPos);
-}
-
-bool isResourcePathIncluded(string hostName){
-    if((int)hostName.find("/") != -1)
-        return true;
-    return false;
-}
-
-void seperateIpAndPort(string *hostName, string *port){
-    size_t colonPos = hostName->find(":");
-    *port = hostName->substr(colonPos + 1, hostName->length() - colonPos);
-    *hostName = hostName->substr(0, colonPos);
-}
-
-bool isPortIncluded(string host){
-    if ((int) host.find(":") != -1)
-        return true;
-    return false;
-}
-
-string getHostNameFromRequest(string requestBody){
-
-    size_t hostStartPos = requestBody.find(HOST_EXPR) + 6;
-    string hostName = requestBody.substr(hostStartPos, requestBody.find("\r\n", hostStartPos) - hostStartPos);
-
-    return hostName;
 }
 
 string prepareRemoteRequestBody(string requestBody, string hostName, string resourcePath){
