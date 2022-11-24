@@ -11,16 +11,12 @@ int main(){
 }
 
 string processRequest(string requestBody) {
-
-    string remoteResponse = makeRequest(requestBody);
-    return remoteResponse;
-
-
     string cachedResponse = retrieveFromCache(requestBody);
     if(cachedResponse != "") {
         return cachedResponse;
     }
 
+    string remoteResponse = makeRequest(requestBody);
     saveToCache(requestBody, remoteResponse);
     return remoteResponse;
 }
