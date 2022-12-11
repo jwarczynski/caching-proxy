@@ -31,7 +31,7 @@ Request *parseRequestBody(string &requestBody){
 
     request->headers = headers;
 
-    // Body can be extracted here, but we don't need it.
+    request->rawRequest = requestBody;
 
     return request;
 }

@@ -3,6 +3,7 @@
 
 #include<string>
 #include<map>
+#include "http.hpp"
 
 using namespace std;
 
@@ -11,7 +12,7 @@ struct CacheEntry {
     string responseBody;
 };
 
-CacheEntry retrieveFromCache(string requestBody);
-void saveToCache(string requestBody, string responseBody);
+CacheEntry retrieveFromCache(Request *request);
+void saveToCache(Request *request, string responseBody);
 
 #endif

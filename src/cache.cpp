@@ -1,5 +1,4 @@
 #include "cache.hpp"
-#include "http.hpp"
 #include<map>
 #include<iostream>
 
@@ -15,12 +14,11 @@ bool operator<(const CacheEntryKey& l, const CacheEntryKey& r) {
 // Value = response body
 map<CacheEntryKey, CacheEntry> cache;
 
-CacheEntry retrieveFromCache(string requestBody){
+CacheEntry retrieveFromCache(Request *request){
     CacheEntry responseBody = {
         .status = CacheEntry::NOT_FOUND,
         .responseBody = ""
     };
-    Request *request = parseRequestBody(requestBody);
 
     string url = buildUrl(request);
     CacheEntryKey key = {
@@ -33,13 +31,10 @@ CacheEntry retrieveFromCache(string requestBody){
         cout << "Cache miss for: " << url << endl;
     }
 
-    freeRequest(request);
     return responseBody;
 }
 
-void saveToCache(string requestBody, string responseBody){
-    Request *request = parseRequestBody(requestBody);
-
+void saveToCache(Request *request, string responseBody){
     string url = buildUrl(request);
     CacheEntryKey key = {
         .url = url
@@ -51,6 +46,4 @@ void saveToCache(string requestBody, string responseBody){
     cache.insert(pair<CacheEntryKey, CacheEntry>(key, entry));
 
     cout << "Saved to cache: " << url << endl;
-
-    freeRequest(request);
 }

@@ -11,7 +11,7 @@ struct Request {
     string method;
     string version;
     map<string, string> *headers;
-    // Request body is not important for us.
+    string rawRequest;
 };
 
 struct Url {

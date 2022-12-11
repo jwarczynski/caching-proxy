@@ -1,6 +1,7 @@
 #include "server.hpp"
 #include "cache.hpp"
 #include "client.hpp"
+#include "http.hpp"
 
 string processRequest(string requestBody);
 
@@ -11,13 +12,17 @@ int main(){
 }
 
 string processRequest(string requestBody) {
-    CacheEntry cachedResponse = retrieveFromCache(requestBody);
+    Request *request = parseRequestBody(requestBody);
+
+    CacheEntry cachedResponse = retrieveFromCache(request);
     if(cachedResponse.status != CacheEntry::NOT_FOUND) {
         // TODO: If waiting?
         return cachedResponse.responseBody;
     }
 
     string remoteResponse = makeRequest(requestBody);
-    saveToCache(requestBody, remoteResponse);
+    saveToCache(request, remoteResponse);
+
+    freeRequest(request);
     return remoteResponse;
 }
