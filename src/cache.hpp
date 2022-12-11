@@ -14,5 +14,6 @@ struct CacheEntry {
 
 CacheEntry retrieveFromCache(Request *request);
 void saveToCache(Request *request, string responseBody);
+void markAsWaiting(Request *request);
 
 #endif

@@ -43,7 +43,21 @@ void saveToCache(Request *request, string responseBody){
         .status = CacheEntry::READY,
         .responseBody = responseBody
     };
-    cache.insert(pair<CacheEntryKey, CacheEntry>(key, entry));
+    cache[key] = entry;
 
     cout << "Saved to cache: " << url << endl;
+}
+
+void markAsWaiting(Request *request){
+    string url = buildUrl(request);
+    CacheEntryKey key = {
+        .url = url
+    };
+    CacheEntry entry = {
+        .status = CacheEntry::WAITING,
+        .responseBody = ""
+    };
+    cache[key] = entry;
+
+    cout << "Marked as waiting: " << url << endl;
 }

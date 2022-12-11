@@ -2,6 +2,7 @@
 #include "cache.hpp"
 #include "client.hpp"
 #include "http.hpp"
+#include<thread>
 
 string processRequest(string requestBody);
 
@@ -16,10 +17,16 @@ string processRequest(string requestBody) {
 
     CacheEntry cachedResponse = retrieveFromCache(request);
     if(cachedResponse.status != CacheEntry::NOT_FOUND) {
-        // TODO: If waiting?
+        while(cachedResponse.status == CacheEntry::WAITING){
+            this_thread::sleep_for(chrono::milliseconds(100));
+            cachedResponse = retrieveFromCache(request);
+        }
+
+        freeRequest(request);
         return cachedResponse.responseBody;
     }
 
+    markAsWaiting(request);
     string remoteResponse = makeRequest(requestBody);
     saveToCache(request, remoteResponse);
 
