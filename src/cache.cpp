@@ -13,10 +13,13 @@ bool operator<(const CacheEntryKey& l, const CacheEntryKey& r) {
 }
 
 // Value = response body
-map<CacheEntryKey, string> cache;
+map<CacheEntryKey, CacheEntry> cache;
 
-string retrieveFromCache(string requestBody){
-    string responseBody = "";
+CacheEntry retrieveFromCache(string requestBody){
+    CacheEntry responseBody = {
+        .status = CacheEntry::NOT_FOUND,
+        .responseBody = ""
+    };
     Request *request = parseRequestBody(requestBody);
 
     string url = buildUrl(request);
@@ -41,7 +44,11 @@ void saveToCache(string requestBody, string responseBody){
     CacheEntryKey key = {
         .url = url
     };
-    cache.insert(pair<CacheEntryKey, string>(key, responseBody));
+    CacheEntry entry = {
+        .status = CacheEntry::READY,
+        .responseBody = responseBody
+    };
+    cache.insert(pair<CacheEntryKey, CacheEntry>(key, entry));
 
     cout << "Saved to cache: " << url << endl;
 

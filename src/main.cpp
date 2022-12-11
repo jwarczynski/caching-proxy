@@ -11,9 +11,10 @@ int main(){
 }
 
 string processRequest(string requestBody) {
-    string cachedResponse = retrieveFromCache(requestBody);
-    if(cachedResponse != "") {
-        return cachedResponse;
+    CacheEntry cachedResponse = retrieveFromCache(requestBody);
+    if(cachedResponse.status != CacheEntry::NOT_FOUND) {
+        // TODO: If waiting?
+        return cachedResponse.responseBody;
     }
 
     string remoteResponse = makeRequest(requestBody);

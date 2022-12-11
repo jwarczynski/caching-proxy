@@ -6,7 +6,12 @@
 
 using namespace std;
 
-string retrieveFromCache(string requestBody);
+struct CacheEntry {
+    enum { READY, WAITING, NOT_FOUND } status;
+    string responseBody;
+};
+
+CacheEntry retrieveFromCache(string requestBody);
 void saveToCache(string requestBody, string responseBody);
 
 #endif
