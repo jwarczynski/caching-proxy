@@ -8,6 +8,7 @@
 #include <netdb.h>
 #include <stdexcept>
 #include <thread>
+#include <iostream>
 
 
 sockaddr_in* getServerAddressByHost(string domain);
