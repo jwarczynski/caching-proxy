@@ -8,6 +8,7 @@
 #include <netdb.h>
 #include <stdexcept>
 #include <thread>
+#include <iostream>
 
 
 sockaddr_in* getServerAddressByHost(string domain);
@@ -71,16 +72,20 @@ string makeRequest(string requestBody) {
     }
 
     char rcvBuf[INT16_MAX];
+    int i = 0;
     ssize_t bytesRead = 0;
     ssize_t currRead;
     do{
-        currRead = read(clientSocket, rcvBuf + bytesRead, INT16_MAX - bytesRead);
-        bytesRead += currRead;
+        currRead = recv(clientSocket, rcvBuf + bytesRead, INT16_MAX - bytesRead, i ? MSG_DONTWAIT : 0);
+        if(currRead > 0)
+            bytesRead += currRead;
 
-        if(currRead < 0){
+        if(currRead < 0 && errno != EWOULDBLOCK){
             return handleInternalError(clientSocket, "error during reading http response");
         }
         this_thread::sleep_for(chrono::milliseconds(50));
+        cout << currRead << endl;
+        i++;
     } while(currRead > 0);
 
     if(bytesRead == 0){
