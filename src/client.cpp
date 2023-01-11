@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <stdexcept>
+#include <thread>
 
 
 sockaddr_in* getServerAddressByHost(string domain);
@@ -70,11 +71,19 @@ string makeRequest(string requestBody) {
     }
 
     char rcvBuf[INT16_MAX];
-    ssize_t bytesRead = read(clientSocket, rcvBuf, INT16_MAX);
-    if(bytesRead < 0){
-        return handleInternalError(clientSocket, "error during reading http response");
-    }
-    else if(bytesRead == 0){
+    ssize_t bytesRead = 0;
+    ssize_t currRead;
+    do{
+        currRead = read(clientSocket, rcvBuf + bytesRead, INT16_MAX - bytesRead);
+        bytesRead += currRead;
+
+        if(currRead < 0){
+            return handleInternalError(clientSocket, "error during reading http response");
+        }
+        this_thread::sleep_for(chrono::milliseconds(50));
+    } while(currRead > 0);
+
+    if(bytesRead == 0){
         return handleInternalError(clientSocket, "received nothing from remote server");
     }
 

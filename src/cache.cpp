@@ -1,5 +1,4 @@
 #include "cache.hpp"
-#include "http.hpp"
 #include<map>
 #include<iostream>
 
@@ -13,11 +12,13 @@ bool operator<(const CacheEntryKey& l, const CacheEntryKey& r) {
 }
 
 // Value = response body
-map<CacheEntryKey, string> cache;
+map<CacheEntryKey, CacheEntry> cache;
 
-string retrieveFromCache(string requestBody){
-    string responseBody = "";
-    Request *request = parseRequestBody(requestBody);
+CacheEntry retrieveFromCache(Request *request){
+    CacheEntry responseBody = {
+        .status = CacheEntry::NOT_FOUND,
+        .responseBody = ""
+    };
 
     string url = buildUrl(request);
     CacheEntryKey key = {
@@ -30,20 +31,33 @@ string retrieveFromCache(string requestBody){
         cout << "Cache miss for: " << url << endl;
     }
 
-    freeRequest(request);
     return responseBody;
 }
 
-void saveToCache(string requestBody, string responseBody){
-    Request *request = parseRequestBody(requestBody);
-
+void saveToCache(Request *request, string responseBody){
     string url = buildUrl(request);
     CacheEntryKey key = {
         .url = url
     };
-    cache.insert(pair<CacheEntryKey, string>(key, responseBody));
+    CacheEntry entry = {
+        .status = CacheEntry::READY,
+        .responseBody = responseBody
+    };
+    cache[key] = entry;
 
     cout << "Saved to cache: " << url << endl;
+}
 
-    freeRequest(request);
+void markAsWaiting(Request *request){
+    string url = buildUrl(request);
+    CacheEntryKey key = {
+        .url = url
+    };
+    CacheEntry entry = {
+        .status = CacheEntry::WAITING,
+        .responseBody = ""
+    };
+    cache[key] = entry;
+
+    cout << "Marked as waiting: " << url << endl;
 }

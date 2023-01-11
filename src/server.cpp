@@ -9,6 +9,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <thread>
 
 
 int createSocket();
@@ -25,27 +26,31 @@ void startServer(requestHandler handleRequest){
         struct sockaddr_in clientAddress;
         socklen_t clientAddressLength = sizeof(clientAddress);
         int clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddress, &clientAddressLength);
-        if(clientSocket == -1){
-            perror("Failed to accept connection");
-            exit(1);
-        }
+        
+        std::thread t([clientSocket, handleRequest](){
+            if(clientSocket == -1){
+                perror("Failed to accept connection");
+                return;
+            }
 
-        char buffer[1024];
-        int bytesRead = read(clientSocket, buffer, 1024);
-        if(bytesRead == -1){
-            perror("Failed to read from socket");
-            exit(1);
-        }
+            char buffer[1024];
+            int bytesRead = read(clientSocket, buffer, 1024);
+            if(bytesRead == -1){
+                perror("Failed to read from socket");
+                return;
+            }
 
-        try {
-            string requestBody(buffer, bytesRead);
-            string responseBody = handleRequest(requestBody);
+            try {
+                string requestBody(buffer, bytesRead);
+                string responseBody = handleRequest(requestBody);
 
-            write(clientSocket, responseBody.c_str(), responseBody.length());
-        }catch(exception &e){
-            // TODO: Error page?
-        }
-        close(clientSocket);
+                write(clientSocket, responseBody.c_str(), responseBody.length());
+            }catch(exception &e){
+                // TODO: Error page?
+            }
+            close(clientSocket);
+        });
+        t.detach();
     }
 }
 

@@ -3,10 +3,17 @@
 
 #include<string>
 #include<map>
+#include "http.hpp"
 
 using namespace std;
 
-string retrieveFromCache(string requestBody);
-void saveToCache(string requestBody, string responseBody);
+struct CacheEntry {
+    enum { READY, WAITING, NOT_FOUND } status;
+    string responseBody;
+};
+
+CacheEntry retrieveFromCache(Request *request);
+void saveToCache(Request *request, string responseBody);
+void markAsWaiting(Request *request);
 
 #endif

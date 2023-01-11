@@ -1,6 +1,8 @@
 #include "server.hpp"
 #include "cache.hpp"
 #include "client.hpp"
+#include "http.hpp"
+#include<thread>
 
 string processRequest(string requestBody);
 
@@ -11,12 +13,23 @@ int main(){
 }
 
 string processRequest(string requestBody) {
-    string cachedResponse = retrieveFromCache(requestBody);
-    if(cachedResponse != "") {
-        return cachedResponse;
+    Request *request = parseRequestBody(requestBody);
+
+    CacheEntry cachedResponse = retrieveFromCache(request);
+    if(cachedResponse.status != CacheEntry::NOT_FOUND) {
+        while(cachedResponse.status == CacheEntry::WAITING){
+            this_thread::sleep_for(chrono::milliseconds(100));
+            cachedResponse = retrieveFromCache(request);
+        }
+
+        freeRequest(request);
+        return cachedResponse.responseBody;
     }
 
+    markAsWaiting(request);
     string remoteResponse = makeRequest(requestBody);
-    saveToCache(requestBody, remoteResponse);
+    saveToCache(request, remoteResponse);
+
+    freeRequest(request);
     return remoteResponse;
 }
