@@ -35,13 +35,13 @@ CacheEntry retrieveFromCache(Request *request){
 
     if(response.status == CacheEntry::READY){
         cout << "Cache hit for: " << url << endl;
-        // string requestEtag = "";
-        // if(request->headers->find("if-none-match") != request->headers->end()){
-        //     requestEtag = request->headers->at("if-none-match");
-        // }
-        // if(requestEtag == response.etag && requestEtag != ""){
-        //     response.responseBody = "HTTP/1.1 304 Not Modified\r\nETag: " + response.etag + "\r\n\r\n";
-        // }
+        string requestEtag = "";
+        if(request->headers->find("if-none-match") != request->headers->end()){
+            requestEtag = request->headers->at("if-none-match");
+        }
+        if(requestEtag == response.etag && requestEtag != ""){
+            response.responseBody = "HTTP/1.1 304 Not Modified\r\nETag: " + response.etag + "\r\n\r\n";
+        }
     }
 
     return response;
