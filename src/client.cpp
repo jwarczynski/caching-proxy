@@ -84,7 +84,6 @@ string makeRequest(string requestBody) {
             return handleInternalError(clientSocket, "error during reading http response");
         }
         this_thread::sleep_for(chrono::milliseconds(50));
-        cout << currRead << endl;
         i++;
     } while(currRead > 0);
 

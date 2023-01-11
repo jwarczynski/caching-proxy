@@ -1,4 +1,5 @@
 #include "http.hpp"
+#include<bits/stdc++.h>
 
 Request *parseRequestBody(string &requestBody){
     Request *request = new Request();
@@ -13,27 +14,31 @@ Request *parseRequestBody(string &requestBody){
     size_t versionEnd = requestBody.find("\r\n", urlEnd + 1);
     request->version = requestBody.substr(urlEnd + 1, versionEnd - urlEnd - 1);
 
-
-    // Parse headers
-    map<string, string> *headers = new map<string, string>();
-    ssize_t lineBeginning = versionEnd + 2;
-    ssize_t lineEnd = requestBody.find("\r\n", lineBeginning + 1);
-    do {
-        string line = requestBody.substr(lineBeginning, lineEnd - lineBeginning);
-        size_t colon = line.find(':');
-        size_t valueStart = line.find_first_not_of(' ', colon + 1);
-        string key = line.substr(0, colon);
-        string value = line.substr(valueStart);
-        headers->insert(pair<string, string>(key, value));
-        lineBeginning = lineEnd + 2;
-        lineEnd = requestBody.find("\r\n", lineBeginning + 1);
-    } while (lineEnd - lineBeginning > 0 && lineEnd != string::npos);
-
-    request->headers = headers;
+    request->headers = parseHttpHeaders(requestBody, versionEnd + 2);
 
     request->rawRequest = requestBody;
 
     return request;
+}
+
+map<string, string>* parseHttpHeaders(string requestBody, int startPos){
+    map<string, string> *headers = new map<string, string>();
+    size_t lineBeginning = startPos;
+    size_t lineEnd = requestBody.find("\r\n", lineBeginning + 1);
+    do {
+        string line = requestBody.substr(lineBeginning, lineEnd - lineBeginning);
+        size_t colon = line.find(':');
+        if(colon != string::npos){
+            size_t valueStart = line.find_first_not_of(' ', colon + 1);
+            string key = line.substr(0, colon);
+            transform(key.begin(), key.end(), key.begin(), ::tolower);
+            string value = line.substr(valueStart);
+            headers->insert(pair<string, string>(key, value));
+        }
+        lineBeginning = lineEnd + 2;
+        lineEnd = requestBody.find("\r\n", lineBeginning + 1);
+    } while (lineEnd - lineBeginning > 0 && lineEnd != string::npos);
+    return headers;
 }
 
 void freeRequest(Request *request){
@@ -52,8 +57,8 @@ string buildUrl(Request *request){
     if(httpsPos == 0) return url.substr(8);
     if(httpsPos == 1 && url[0] == '/') return url.substr(9);
 
-    if(request->headers->find("Host") != request->headers->end()){
-        url = request->headers->at("Host") + url;
+    if(request->headers->find("host") != request->headers->end()){
+        url = request->headers->at("host") + url;
     }
     return url;
 }
