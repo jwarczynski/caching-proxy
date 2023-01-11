@@ -13,6 +13,7 @@
 
 sockaddr_in* getServerAddressByHost(string domain);
 sockaddr_in *getServerAddressByHostAndPort(string host, string port);
+void removeHeader(string *requestBody, string header);
 
 string prepareRemoteRequestBody(string requestBody, string hostName, string resourcePath);
 int prepareRemoteRequest(string *requestBody, sockaddr_in **serverAddr);
@@ -124,5 +125,18 @@ string prepareRemoteRequestBody(string requestBody, string hostName, string reso
     int hostLen = hostEndPos - hostStartPos;
     requestBody.replace(hostStartPos, hostLen, hostName);
 
+    removeHeader(&requestBody, "If-None-Match:");
+    removeHeader(&requestBody, "If-Modified-Since:");
+
     return requestBody;
+}
+
+void removeHeader(string *requestBody, string header){
+    size_t etagStartPos = requestBody->find(header);
+    if(etagStartPos != string::npos){
+        cout << "Removing " << header << endl;
+        size_t etagEndPos = requestBody->find("\r\n", etagStartPos) + 2;
+        size_t etagLen = etagEndPos - etagStartPos;
+        requestBody->erase(etagStartPos, etagLen);
+    }
 }
