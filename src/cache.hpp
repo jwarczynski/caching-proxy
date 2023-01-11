@@ -9,6 +9,7 @@ using namespace std;
 
 struct CacheEntry {
     enum { READY, WAITING, NOT_FOUND } status;
+    string etag;
     string responseBody;
 };
 

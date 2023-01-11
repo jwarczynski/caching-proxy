@@ -2,6 +2,8 @@
 #include<map>
 #include<iostream>
 
+string extractEtag(string requestBody);
+
 struct CacheEntryKey {
     string url;
 };
@@ -15,8 +17,9 @@ bool operator<(const CacheEntryKey& l, const CacheEntryKey& r) {
 map<CacheEntryKey, CacheEntry> cache;
 
 CacheEntry retrieveFromCache(Request *request){
-    CacheEntry responseBody = {
+    CacheEntry response = {
         .status = CacheEntry::NOT_FOUND,
+        .etag = "",
         .responseBody = ""
     };
 
@@ -25,13 +28,23 @@ CacheEntry retrieveFromCache(Request *request){
         .url = url
     };
     if(cache.find(key) != cache.end()){
-        responseBody = cache.at(key);
-        cout << "Cache hit for: " << url << endl;
+        response = cache.at(key);
     }else{
         cout << "Cache miss for: " << url << endl;
     }
 
-    return responseBody;
+    if(response.status == CacheEntry::READY){
+        cout << "Cache hit for: " << url << endl;
+        // string requestEtag = "";
+        // if(request->headers->find("if-none-match") != request->headers->end()){
+        //     requestEtag = request->headers->at("if-none-match");
+        // }
+        // if(requestEtag == response.etag && requestEtag != ""){
+        //     response.responseBody = "HTTP/1.1 304 Not Modified\r\nETag: " + response.etag + "\r\n\r\n";
+        // }
+    }
+
+    return response;
 }
 
 void saveToCache(Request *request, string responseBody){
@@ -41,6 +54,7 @@ void saveToCache(Request *request, string responseBody){
     };
     CacheEntry entry = {
         .status = CacheEntry::READY,
+        .etag = extractEtag(responseBody),
         .responseBody = responseBody
     };
     cache[key] = entry;
@@ -55,9 +69,19 @@ void markAsWaiting(Request *request){
     };
     CacheEntry entry = {
         .status = CacheEntry::WAITING,
+        .etag = "",
         .responseBody = ""
     };
     cache[key] = entry;
 
     cout << "Marked as waiting: " << url << endl;
+}
+
+string extractEtag(string requestBody){
+    map<string, string> *headers = parseHttpHeaders(requestBody, 0);
+    if(headers->find("etag") == headers->end()) return "";
+
+    string etag = headers->at("etag");
+    delete headers;
+    return etag;
 }

@@ -22,6 +22,7 @@ struct Url {
 };
 
 Request *parseRequestBody(string &requestBody);
+map<string, string>* parseHttpHeaders(string requestBody, int startPos);
 void freeRequest(Request *request);
 string buildUrl(Request *request);
 Url parseUrl(string url);
